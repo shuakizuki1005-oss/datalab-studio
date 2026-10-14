@@ -5,8 +5,14 @@ import { useState } from "react";
 import { parseCsv } from "@/lib/csv-parser";
 import type { CsvDataset } from "@/types/csv";
 
+import { analyzeCsv} from "@/lib/api";
+import type { AnalysisResult } from "@/types/analysis";
+
 interface CsvUploaderProps {
-  onUpload: (dataset: CsvDataset) => void;
+  onUpload: (
+    dataset: CsvDataset,
+    analysis: AnalysisResult,
+    ) => void;
 }
 
 export default function CsvUploader({
@@ -44,7 +50,8 @@ export default function CsvUploader({
         createdAt: new Date().toISOString(),
       };
 
-      onUpload(dataset);
+      const analysis: AnalysisResult = await analyzeCsv(file);
+      onUpload(dataset, analysis);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "読み込みに失敗しました。"

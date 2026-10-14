@@ -8,18 +8,36 @@ import DatasetTable from "@/components/DatasetTable";
 import CsvUploader from "@/components/CsvUploader";
 import DataPreview from "@/components/DataPreview";
 import DatasetSummary from "@/components/DatasetSummary";
+import PythonAnalysis from "@/components/PythonAnalysis";
 import { dashboardStats, datasets } from "@/lib/mock-data";
 import type { CsvDataset } from "@/types/csv";
+import type { AnalysisResult } from "@/types/analysis";
+
+interface UploadedDataset {
+  dataset: CsvDataset;
+  analysis: AnalysisResult;
+}
 
 export default function Home() {
-  const [uploadedDatasets, setUploadedDatasets] = useState<CsvDataset[]>([]);
+  const [uploadedDatasets, setUploadedDatasets] =
+    useState<UploadedDataset[]>([]);
+
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const selectedDataset =
-    uploadedDatasets.find((dataset) => dataset.id === selectedId) ?? null;
+  const selectedItem =
+    uploadedDatasets.find(
+      (item) => item.dataset.id === selectedId
+    ) ?? null;
 
-  function handleUpload(dataset: CsvDataset) {
-    setUploadedDatasets((previous) => [dataset, ...previous]);
+  function handleUpload(
+    dataset: CsvDataset,
+    analysis: AnalysisResult
+  ) {
+    setUploadedDatasets((previous) => [
+      { dataset, analysis },
+      ...previous,
+    ]);
+
     setSelectedId(dataset.id);
   }
 
@@ -81,25 +99,33 @@ export default function Home() {
             <select
               id="dataset-select"
               value={selectedId ?? ""}
-              onChange={(event) => setSelectedId(event.target.value)}
+              onChange={(event) =>
+                setSelectedId(event.target.value)
+              }
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white"
             >
-              {uploadedDatasets.map((dataset) => (
-                <option key={dataset.id} value={dataset.id}>
-                  {dataset.name}
+              {uploadedDatasets.map((item) => (
+                <option
+                  key={item.dataset.id}
+                  value={item.dataset.id}
+                >
+                  {item.dataset.name}
                 </option>
               ))}
             </select>
           </section>
         )}
 
-        {selectedDataset && (
+        {selectedItem && (
           <div className="mt-8 space-y-8">
-            <DatasetSummary dataset={selectedDataset} />
+            <DatasetSummary dataset={selectedItem.dataset} />
+
             <DataPreview
-              key={selectedDataset.id}
-              dataset={selectedDataset}
+              key={selectedItem.dataset.id}
+              dataset={selectedItem.dataset}
             />
+
+            <PythonAnalysis analysis={selectedItem.analysis} />
           </div>
         )}
 
@@ -107,11 +133,12 @@ export default function Home() {
           <h2 className="mb-5 text-xl font-semibold">
             Demo Datasets
           </h2>
+
           <DatasetTable datasets={datasets} />
         </section>
 
         <footer className="mt-10 text-xs text-slate-500">
-          Files are processed locally in your browser.
+          CSV files are analyzed locally using Python and pandas.
           Uploaded data is cleared when the page reloads.
         </footer>
       </main>
